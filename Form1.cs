@@ -12,6 +12,10 @@ namespace homeworkMaltimedia
 {
     public partial class Form1 : Form
     {
+        private string currentImagePath;
+        private Bitmap originalBitmap;
+        private Bitmap workingBitmap;
+
         public Form1()
         {
             InitializeComponent();
@@ -23,11 +27,6 @@ namespace homeworkMaltimedia
             picDisplay.DragEnter += PicDisplay_DragEnter;
             picDisplay.DragDrop += PicDisplay_DragDrop;
             picDisplay.MouseMove += PicDisplay_MouseMove;
-            btnBrowse.Click += BtnBrowse_Click;
-            cmbColorSystem.SelectedIndexChanged += CmbColorSystem_SelectedIndexChanged;
-            chkLuminance.CheckedChanged += ChkLuminance_CheckedChanged;
-
-            // initialize UI per default selection
             UpdateColorSystemUI();
         }
 
@@ -62,9 +61,17 @@ namespace homeworkMaltimedia
         {
             try
             {
-                var img = Image.FromFile(path);
-                picDisplay.Image = img;
-                UpdateMetadata(path, img);
+                // load image into a Bitmap to avoid file lock and to allow processing
+                using (var img = Image.FromFile(path))
+                {
+                    originalBitmap?.Dispose();
+                    workingBitmap?.Dispose();
+                    originalBitmap = new Bitmap(img);
+                    workingBitmap = (Bitmap)originalBitmap.Clone();
+                    picDisplay.Image = (Image)workingBitmap.Clone();
+                    currentImagePath = path;
+                    UpdateMetadata(path, originalBitmap);
+                }
             }
             catch (System.Exception ex)
             {
@@ -76,9 +83,99 @@ namespace homeworkMaltimedia
         {
             lstMetadata.Items.Clear();
             lstMetadata.Items.Add(new ListViewItem(new[] { "File Name", System.IO.Path.GetFileName(path) }));
-            lstMetadata.Items.Add(new ListViewItem(new[] { "Format", img.RawFormat.ToString() }));
-            lstMetadata.Items.Add(new ListViewItem(new[] { "Size", $"{img.Width} x {img.Height}" }));
-            // Unique color count computation goes here ideally
+            // Format (use extension)
+            lstMetadata.Items.Add(new ListViewItem(new[] { "Format", System.IO.Path.GetExtension(path).TrimStart('.').ToUpper() }));
+            lstMetadata.Items.Add(new ListViewItem(new[] { "Dimensions", $"{img.Width} x {img.Height}" }));
+            // File size on disk
+            try
+            {
+                var fi = new System.IO.FileInfo(path);
+                lstMetadata.Items.Add(new ListViewItem(new[] { "File Size (bytes)", fi.Length.ToString() }));
+            }
+            catch { }
+            // Pixel format and color depth
+            if (img is Bitmap bmp)
+            {
+                lstMetadata.Items.Add(new ListViewItem(new[] { "Pixel Format", bmp.PixelFormat.ToString() }));
+                lstMetadata.Items.Add(new ListViewItem(new[] { "Color Depth (bits)", Image.GetPixelFormatSize(bmp.PixelFormat).ToString() }));
+                // unique color count (may be slow for very large images)
+                int unique = GetUniqueColorCount(bmp);
+                lstMetadata.Items.Add(new ListViewItem(new[] { "Unique Colors", unique.ToString() }));
+            }
+        }
+
+        private int GetUniqueColorCount(Bitmap bmp)
+        {
+            try
+            {
+                var set = new System.Collections.Generic.HashSet<int>();
+                // limit work for extremely large images to avoid UI freeze
+                long maxPixels = (long)bmp.Width * bmp.Height;
+                if (maxPixels > 4000 * 4000)
+                {
+                    return -1; // indicate too large to compute
+                }
+
+                for (int y = 0; y < bmp.Height; y++)
+                {
+                    for (int x = 0; x < bmp.Width; x++)
+                    {
+                        set.Add(bmp.GetPixel(x, y).ToArgb());
+                    }
+                }
+                return set.Count;
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
+        private void BtnReset_Click(object sender, EventArgs e)
+        {
+            if (originalBitmap != null)
+            {
+                workingBitmap?.Dispose();
+                workingBitmap = (Bitmap)originalBitmap.Clone();
+                picDisplay.Image = (Image)workingBitmap.Clone();
+                lblStatusPixel.Text = "Image reset to original.";
+            }
+        }
+
+        private void BtnSave_Click(object sender, EventArgs e)
+        {
+            if (picDisplay.Image == null) return;
+            using (SaveFileDialog sfd = new SaveFileDialog())
+            {
+                sfd.Filter = "PNG Image|*.png|JPEG Image|*.jpg;*.jpeg|Bitmap Image|*.bmp|GIF Image|*.gif";
+                sfd.FileName = System.IO.Path.GetFileName(currentImagePath) ?? "image";
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    var fmt = System.Drawing.Imaging.ImageFormat.Png;
+                    var ext = System.IO.Path.GetExtension(sfd.FileName).ToLower();
+                    switch (ext)
+                    {
+                        case ".jpg":
+                        case ".jpeg": fmt = System.Drawing.Imaging.ImageFormat.Jpeg; break;
+                        case ".bmp": fmt = System.Drawing.Imaging.ImageFormat.Bmp; break;
+                        case ".gif": fmt = System.Drawing.Imaging.ImageFormat.Gif; break;
+                        default: fmt = System.Drawing.Imaging.ImageFormat.Png; break;
+                    }
+                    try
+                    {
+                        // save current displayed image
+                        using (var toSave = new Bitmap(picDisplay.Image))
+                        {
+                            toSave.Save(sfd.FileName, fmt);
+                        }
+                        lblStatusPixel.Text = $"Saved to {sfd.FileName}";
+                    }
+                    catch (System.Exception ex)
+                    {
+                        MessageBox.Show($"Error saving image: {ex.Message}");
+                    }
+                }
+            }
         }
 
         private void PicDisplay_MouseMove(object sender, MouseEventArgs e)
@@ -125,7 +222,7 @@ namespace homeworkMaltimedia
             switch (sys)
             {
                 case "RGB":
-                    lblCh1.Text = "R"; lblCh2.Text = "G"; lblCh3.Text = "B";
+                    lblCh1.Text = "R"; lblCh2.Text = "G"; lblCh3.Text = "B"; lblCh4.Text = "";
                     trkR.Minimum = 0; trkR.Maximum = 255;
                     trkG.Minimum = 0; trkG.Maximum = 255;
                     trkB.Minimum = 0; trkB.Maximum = 255;
@@ -142,7 +239,7 @@ namespace homeworkMaltimedia
                     chkLuminance.Enabled = false;
                     break;
                 case "HSV":
-                    lblCh1.Text = "H"; lblCh2.Text = "S"; lblCh3.Text = "V";
+                    lblCh1.Text = "H"; lblCh2.Text = "S"; lblCh3.Text = "V"; lblCh4.Text = "";
                     trkR.Minimum = 0; trkR.Maximum = 360; // Hue
                     trkG.Minimum = 0; trkG.Maximum = 100; // Saturation %
                     trkB.Minimum = 0; trkB.Maximum = 100; // Value %
@@ -150,7 +247,7 @@ namespace homeworkMaltimedia
                     chkLuminance.Enabled = false;
                     break;
                 case "YUV":
-                    lblCh1.Text = "Y"; lblCh2.Text = "U"; lblCh3.Text = "V";
+                    lblCh1.Text = "Y"; lblCh2.Text = "U"; lblCh3.Text = "V"; lblCh4.Text = "";
                     trkR.Minimum = 0; trkR.Maximum = 255; // Y
                     trkG.Minimum = -128; trkG.Maximum = 127; // U
                     trkB.Minimum = -128; trkB.Maximum = 127; // V
@@ -158,7 +255,7 @@ namespace homeworkMaltimedia
                     chkLuminance.Enabled = true;
                     break;
                 case "LAB":
-                    lblCh1.Text = "L"; lblCh2.Text = "a"; lblCh3.Text = "b";
+                    lblCh1.Text = "L"; lblCh2.Text = "A"; lblCh3.Text = "B"; lblCh4.Text = "";
                     trkR.Minimum = 0; trkR.Maximum = 100; // L
                     trkG.Minimum = -128; trkG.Maximum = 127; // a
                     trkB.Minimum = -128; trkB.Maximum = 127; // b
@@ -166,7 +263,7 @@ namespace homeworkMaltimedia
                     chkLuminance.Enabled = true;
                     break;
                 case "YCbCr":
-                    lblCh1.Text = "Y"; lblCh2.Text = "Cb"; lblCh3.Text = "Cr";
+                    lblCh1.Text = "Y"; lblCh2.Text = "Cb"; lblCh3.Text = "Cr"; lblCh4.Text = "";
                     trkR.Minimum = 0; trkR.Maximum = 255; // Y
                     trkG.Minimum = -128; trkG.Maximum = 127; // Cb
                     trkB.Minimum = -128; trkB.Maximum = 127; // Cr
@@ -174,6 +271,33 @@ namespace homeworkMaltimedia
                     chkLuminance.Enabled = true;
                     break;
             }
+        }
+
+        
+
+        private void trk4_Scroll(object sender, EventArgs e)
+        {
+
+        }
+
+        private void trkG_Scroll(object sender, EventArgs e)
+        {
+
+        }
+
+        private void lblCh3_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void trkR_Scroll(object sender, EventArgs e)
+        {
+
+        }
+
+        private void picDisplay_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

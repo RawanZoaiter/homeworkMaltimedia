@@ -110,35 +110,38 @@
             // 
             this.btnBrowse.Location = new System.Drawing.Point(13, 13);
             this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.Size = new System.Drawing.Size(200, 30);
+            this.btnBrowse.Size = new System.Drawing.Size(219, 30);
             this.btnBrowse.TabIndex = 0;
             this.btnBrowse.Text = "Browse Image...";
             this.btnBrowse.UseVisualStyleBackColor = true;
+            this.btnBrowse.Click += new System.EventHandler(this.BtnBrowse_Click);
             // 
             // btnSave
             // 
             this.btnSave.Location = new System.Drawing.Point(13, 49);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(200, 30);
+            this.btnSave.Size = new System.Drawing.Size(219, 30);
             this.btnSave.TabIndex = 1;
             this.btnSave.Text = "Save to Disk";
             this.btnSave.UseVisualStyleBackColor = true;
+            this.btnSave.Click += new System.EventHandler(this.BtnSave_Click);
             // 
             // btnReset
             // 
             this.btnReset.Location = new System.Drawing.Point(13, 85);
             this.btnReset.Name = "btnReset";
-            this.btnReset.Size = new System.Drawing.Size(200, 30);
+            this.btnReset.Size = new System.Drawing.Size(219, 30);
             this.btnReset.TabIndex = 2;
             this.btnReset.Text = "Reset to Original";
             this.btnReset.UseVisualStyleBackColor = true;
+            this.btnReset.Click += new System.EventHandler(this.BtnReset_Click);
             // 
             // lblColorSystemTitle
             // 
             this.lblColorSystemTitle.AutoSize = true;
-            this.lblColorSystemTitle.Location = new System.Drawing.Point(13, 121);
+            this.lblColorSystemTitle.Location = new System.Drawing.Point(13, 118);
             this.lblColorSystemTitle.Name = "lblColorSystemTitle";
-            this.lblColorSystemTitle.Size = new System.Drawing.Size(126, 17);
+            this.lblColorSystemTitle.Size = new System.Drawing.Size(127, 16);
             this.lblColorSystemTitle.TabIndex = 3;
             this.lblColorSystemTitle.Text = "Active Color System";
             // 
@@ -153,19 +156,19 @@
             "YUV",
             "LAB",
             "YCbCr"});
-            this.cmbColorSystem.Location = new System.Drawing.Point(13, 141);
+            this.cmbColorSystem.Location = new System.Drawing.Point(13, 137);
             this.cmbColorSystem.Name = "cmbColorSystem";
-            this.cmbColorSystem.Size = new System.Drawing.Size(200, 24);
+            this.cmbColorSystem.Size = new System.Drawing.Size(219, 24);
             this.cmbColorSystem.TabIndex = 4;
-            this.cmbColorSystem.SelectedIndex = 0;
+            this.cmbColorSystem.SelectedIndexChanged += new System.EventHandler(this.CmbColorSystem_SelectedIndexChanged);
             // 
             // grpColorReduction
             // 
             this.grpColorReduction.Controls.Add(this.btnReduceColors);
             this.grpColorReduction.Controls.Add(this.numColors);
-            this.grpColorReduction.Location = new System.Drawing.Point(13, 121);
+            this.grpColorReduction.Location = new System.Drawing.Point(13, 167);
             this.grpColorReduction.Name = "grpColorReduction";
-            this.grpColorReduction.Size = new System.Drawing.Size(200, 80);
+            this.grpColorReduction.Size = new System.Drawing.Size(219, 80);
             this.grpColorReduction.TabIndex = 3;
             this.grpColorReduction.TabStop = false;
             this.grpColorReduction.Text = "Color Reduction";
@@ -204,9 +207,9 @@
             // grpChannels
             // 
             this.grpChannels.Controls.Add(this.chkLuminance);
-            this.grpChannels.Location = new System.Drawing.Point(13, 201);
+            this.grpChannels.Location = new System.Drawing.Point(13, 253);
             this.grpChannels.Name = "grpChannels";
-            this.grpChannels.Size = new System.Drawing.Size(200, 60);
+            this.grpChannels.Size = new System.Drawing.Size(219, 60);
             this.grpChannels.TabIndex = 6;
             this.grpChannels.TabStop = false;
             this.grpChannels.Text = "Channels";
@@ -231,9 +234,9 @@
             this.grpRGB.Controls.Add(this.trkB);
             this.grpRGB.Controls.Add(this.lblCh4);
             this.grpRGB.Controls.Add(this.trk4);
-            this.grpRGB.Location = new System.Drawing.Point(13, 267);
+            this.grpRGB.Location = new System.Drawing.Point(13, 319);
             this.grpRGB.Name = "grpRGB";
-            this.grpRGB.Size = new System.Drawing.Size(200, 220);
+            this.grpRGB.Size = new System.Drawing.Size(219, 335);
             this.grpRGB.TabIndex = 7;
             this.grpRGB.TabStop = false;
             this.grpRGB.Text = "Color System Controls";
@@ -241,49 +244,52 @@
             // lblCh1
             // 
             this.lblCh1.AutoSize = true;
-            this.lblCh1.Location = new System.Drawing.Point(6, 3);
+            this.lblCh1.Location = new System.Drawing.Point(8, 18);
             this.lblCh1.Name = "lblCh1";
-            this.lblCh1.Size = new System.Drawing.Size(17, 17);
+            this.lblCh1.Size = new System.Drawing.Size(17, 16);
             this.lblCh1.TabIndex = 0;
             this.lblCh1.Text = "R";
             // 
             // trkR
             // 
-            this.trkR.Location = new System.Drawing.Point(6, 21);
+            this.trkR.Location = new System.Drawing.Point(3, 37);
             this.trkR.Maximum = 255;
             this.trkR.Name = "trkR";
             this.trkR.Size = new System.Drawing.Size(188, 56);
             this.trkR.TabIndex = 1;
+            this.trkR.Scroll += new System.EventHandler(this.trkR_Scroll);
             // 
             // lblCh2
             // 
             this.lblCh2.AutoSize = true;
-            this.lblCh2.Location = new System.Drawing.Point(6, 45);
+            this.lblCh2.Location = new System.Drawing.Point(6, 94);
             this.lblCh2.Name = "lblCh2";
-            this.lblCh2.Size = new System.Drawing.Size(17, 17);
+            this.lblCh2.Size = new System.Drawing.Size(17, 16);
             this.lblCh2.TabIndex = 2;
             this.lblCh2.Text = "G";
             // 
             // trkG
             // 
-            this.trkG.Location = new System.Drawing.Point(6, 61);
+            this.trkG.Location = new System.Drawing.Point(9, 113);
             this.trkG.Maximum = 255;
             this.trkG.Name = "trkG";
             this.trkG.Size = new System.Drawing.Size(188, 56);
             this.trkG.TabIndex = 3;
+            this.trkG.Scroll += new System.EventHandler(this.trkG_Scroll);
             // 
             // lblCh3
             // 
             this.lblCh3.AutoSize = true;
-            this.lblCh3.Location = new System.Drawing.Point(6, 85);
+            this.lblCh3.Location = new System.Drawing.Point(10, 181);
             this.lblCh3.Name = "lblCh3";
-            this.lblCh3.Size = new System.Drawing.Size(17, 17);
+            this.lblCh3.Size = new System.Drawing.Size(16, 16);
             this.lblCh3.TabIndex = 4;
             this.lblCh3.Text = "B";
+            this.lblCh3.Click += new System.EventHandler(this.lblCh3_Click);
             // 
             // trkB
             // 
-            this.trkB.Location = new System.Drawing.Point(6, 101);
+            this.trkB.Location = new System.Drawing.Point(13, 200);
             this.trkB.Maximum = 255;
             this.trkB.Name = "trkB";
             this.trkB.Size = new System.Drawing.Size(188, 56);
@@ -292,20 +298,20 @@
             // lblCh4
             // 
             this.lblCh4.AutoSize = true;
-            this.lblCh4.Location = new System.Drawing.Point(6, 135);
+            this.lblCh4.Location = new System.Drawing.Point(10, 259);
             this.lblCh4.Name = "lblCh4";
-            this.lblCh4.Size = new System.Drawing.Size(17, 17);
+            this.lblCh4.Size = new System.Drawing.Size(0, 16);
             this.lblCh4.TabIndex = 6;
-            this.lblCh4.Text = "K";
             // 
             // trk4
             // 
-            this.trk4.Location = new System.Drawing.Point(6, 151);
+            this.trk4.Location = new System.Drawing.Point(13, 279);
             this.trk4.Maximum = 100;
             this.trk4.Name = "trk4";
             this.trk4.Size = new System.Drawing.Size(188, 56);
             this.trk4.TabIndex = 7;
             this.trk4.Visible = false;
+            this.trk4.Scroll += new System.EventHandler(this.trk4_Scroll);
             // 
             // tabControlMain
             // 
@@ -340,6 +346,7 @@
             this.picDisplay.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.picDisplay.TabIndex = 0;
             this.picDisplay.TabStop = false;
+            this.picDisplay.Click += new System.EventHandler(this.picDisplay_Click);
             // 
             // tab3DColorSpace
             // 
@@ -418,6 +425,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).EndInit();
             this.splitContainerMain.ResumeLayout(false);
             this.flowLayoutPanelControls.ResumeLayout(false);
+            this.flowLayoutPanelControls.PerformLayout();
             this.grpColorReduction.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.numColors)).EndInit();
             this.grpChannels.ResumeLayout(false);
