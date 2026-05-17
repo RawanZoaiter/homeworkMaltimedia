@@ -31,6 +31,17 @@ namespace homeworkMaltimedia
             picDisplay.DragEnter += PicDisplay_DragEnter;
             picDisplay.DragDrop += PicDisplay_DragDrop;
             picDisplay.MouseMove += PicDisplay_MouseMove;
+
+            trkR.Scroll += (s, e) => { UpdateLabels(); ApplyColorTransform(); };
+            trkG.Scroll += (s, e) => { UpdateLabels(); ApplyColorTransform(); };
+            trkB.Scroll += (s, e) => { UpdateLabels(); ApplyColorTransform(); };
+            trk4.Scroll += (s, e) => { UpdateLabels(); ApplyColorTransform(); };
+
+            checkBox1.CheckedChanged += (s, e) => { trkR.Enabled = checkBox1.Checked; ApplyColorTransform(); };
+            checkBox2.CheckedChanged += (s, e) => { trkG.Enabled = checkBox2.Checked; ApplyColorTransform(); };
+            checkBox3.CheckedChanged += (s, e) => { trkB.Enabled = checkBox3.Checked; ApplyColorTransform(); };
+            checkBox4.CheckedChanged += (s, e) => { trk4.Enabled = checkBox4.Checked; ApplyColorTransform(); };
+
             UpdateColorSystemUI();
         }
 
@@ -197,188 +208,88 @@ namespace homeworkMaltimedia
             ApplyColorTransform();
         }
 
-        private void ChkLuminance_CheckedChanged(object sender, EventArgs e)
-        {
-            // Luminance checkbox affects only color systems that expose a luminance channel (Y or L)
-            var sys = cmbColorSystem.SelectedItem?.ToString() ?? "RGB";
-            if (sys == "YUV" || sys == "LAB" || sys == "YCbCr")
-            {
-                // For now, we only update status text to reflect the toggle; image processing logic should respond to this flag.
-                lblStatusPixel.Text = chkLuminance.Checked ? $"Luminance channel enabled for {sys}" : $"Luminance channel disabled for {sys}";
-            }
-            else
-            {
-                // ensure unchecked for systems without luminance
-                if (chkLuminance.Checked) chkLuminance.Checked = false;
-            }
-        }
-
+       
         private void UpdateColorSystemUI()
         {
             var sys = cmbColorSystem.SelectedItem?.ToString() ?? "RGB";
             // reset defaults
-            trkR.Minimum = 0; trkR.Maximum = 255;
-            trkG.Minimum = 0; trkG.Maximum = 255;
-            trkB.Minimum = 0; trkB.Maximum = 255;
-            trk4.Minimum = 0; trk4.Maximum = 100;
+            checkBox1.Checked = true;
+            checkBox2.Checked = true;
+            checkBox3.Checked = true;
+            checkBox4.Checked = true;
+
+            // Set wide minimums and maximums temporarily to allow Value to reset to 0 without errors
+            trkR.Minimum = -1000; trkR.Maximum = 1000;
+            trkG.Minimum = -1000; trkG.Maximum = 1000;
+            trkB.Minimum = -1000; trkB.Maximum = 1000;
+            trk4.Minimum = -1000; trk4.Maximum = 1000;
+            
+            trkR.Value = 0; trkG.Value = 0; trkB.Value = 0; trk4.Value = 0;
             trk4.Visible = false;
-            chkLuminance.Enabled = false;
 
             switch (sys)
             {
                 case "RGB":
-                    lblCh1.Text = "R"; lblCh2.Text = "G"; lblCh3.Text = "B"; lblCh4.Text = "";
-                    trkR.Minimum = 0; trkR.Maximum = 255;
-                    trkG.Minimum = 0; trkG.Maximum = 255;
-                    trkB.Minimum = 0; trkB.Maximum = 255;
+                    lblCh1.Tag = "R"; lblCh2.Tag = "G"; lblCh3.Tag = "B"; lblCh4.Tag = "";
+                    trkR.Minimum = -255; trkR.Maximum = 255;
+                    trkG.Minimum = -255; trkG.Maximum = 255;
+                    trkB.Minimum = -255; trkB.Maximum = 255;
                     trk4.Visible = false;
-                    chkLuminance.Enabled = false;
+
                     break;
                 case "CMYK":
-                    lblCh1.Text = "C"; lblCh2.Text = "M"; lblCh3.Text = "Y"; lblCh4.Text = "K";
-                    trkR.Minimum = 0; trkR.Maximum = 100;
-                    trkG.Minimum = 0; trkG.Maximum = 100;
-                    trkB.Minimum = 0; trkB.Maximum = 100;
-                    trk4.Minimum = 0; trk4.Maximum = 100;
+                    lblCh1.Tag = "C"; lblCh2.Tag = "M"; lblCh3.Tag = "Y"; lblCh4.Tag = "K";
+                    trkR.Minimum = -255; trkR.Maximum = 255;
+                    trkG.Minimum = -255; trkG.Maximum = 255;
+                    trkB.Minimum = -255; trkB.Maximum = 255;
+                    trk4.Minimum = -255; trk4.Maximum = 255;
                     trk4.Visible = true;
-                    chkLuminance.Enabled = false;
+
                     break;
                 case "HSV":
-                    lblCh1.Text = "H"; lblCh2.Text = "S"; lblCh3.Text = "V"; lblCh4.Text = "";
-                    trkR.Minimum = 0; trkR.Maximum = 360; // Hue
-                    trkG.Minimum = 0; trkG.Maximum = 100; // Saturation %
-                    trkB.Minimum = 0; trkB.Maximum = 100; // Value %
+                    lblCh1.Tag = "H"; lblCh2.Tag = "S"; lblCh3.Tag = "V"; lblCh4.Tag = "";
+                    trkR.Minimum = -360; trkR.Maximum = 360; // Hue
+                    trkG.Minimum = -100; trkG.Maximum = 100; // Saturation %
+                    trkB.Minimum = -100; trkB.Maximum = 100; // Value %
                     trk4.Visible = false;
-                    chkLuminance.Enabled = false;
                     break;
                 case "YUV":
-                    lblCh1.Text = "Y"; lblCh2.Text = "U"; lblCh3.Text = "V"; lblCh4.Text = "";
-                    trkR.Minimum = 0; trkR.Maximum = 255; // Y
-                    trkG.Minimum = -128; trkG.Maximum = 127; // U
-                    trkB.Minimum = -128; trkB.Maximum = 127; // V
+                    lblCh1.Tag = "Y"; lblCh2.Tag = "U"; lblCh3.Tag = "V"; lblCh4.Tag = "";
+                    trkR.Minimum = -255; trkR.Maximum = 255; // Y
+                    trkG.Minimum = -255; trkG.Maximum = 255; // U
+                    trkB.Minimum = -255; trkB.Maximum = 255; // V
                     trk4.Visible = false;
-                    chkLuminance.Enabled = true;
+
                     break;
                 case "LAB":
-                    lblCh1.Text = "L"; lblCh2.Text = "A"; lblCh3.Text = "B"; lblCh4.Text = "";
-                    trkR.Minimum = 0; trkR.Maximum = 100; // L
-                    trkG.Minimum = -128; trkG.Maximum = 127; // a
-                    trkB.Minimum = -128; trkB.Maximum = 127; // b
+                    lblCh1.Tag = "L"; lblCh2.Tag = "A"; lblCh3.Tag = "B"; lblCh4.Tag = "";
+                    trkR.Minimum = -255; trkR.Maximum = 255; // L
+                    trkG.Minimum = -255; trkG.Maximum = 255; // a
+                    trkB.Minimum = -255; trkB.Maximum = 255; // b
                     trk4.Visible = false;
-                    chkLuminance.Enabled = true;
+
                     break;
                 case "YCbCr":
-                    lblCh1.Text = "Y"; lblCh2.Text = "Cb"; lblCh3.Text = "Cr"; lblCh4.Text = "";
-                    trkR.Minimum = 0; trkR.Maximum = 255; // Y
-                    trkG.Minimum = -128; trkG.Maximum = 127; // Cb
-                    trkB.Minimum = -128; trkB.Maximum = 127; // Cr
+                    lblCh1.Tag = "Y"; lblCh2.Tag = "Cb"; lblCh3.Tag = "Cr"; lblCh4.Tag = "";
+                    trkR.Minimum = -255; trkR.Maximum = 255; // Y
+                    trkG.Minimum = -255; trkG.Maximum = 255; // Cb
+                    trkB.Minimum = -255; trkB.Maximum = 255; // Cr
                     trk4.Visible = false;
-                    chkLuminance.Enabled = true;
+
                     break;
             }
+
+            checkBox4.Visible = trk4.Visible;
+            UpdateLabels();
         }
 
-        
-
-        private void trk4_Scroll(object sender, EventArgs e)
+        private void UpdateLabels()
         {
-
-        }
-
-        private void trkG_Scroll(object sender, EventArgs e)
-        {
-
-        }
-
-        private void lblCh3_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void trkR_Scroll(object sender, EventArgs e)
-        {
-
-        }
-
-        private void picDisplay_Click(object sender, EventArgs e)
-        {
-
-        }
-        private int Clamp(int value)
-        {
-            if (value < 0) return 0;
-            if (value > 255) return 255;
-            return value;
-        }
-
-        private Color RGBToHSV(Color c)
-        {
-            double r = c.R / 255.0;
-            double g = c.G / 255.0;
-            double b = c.B / 255.0;
-
-            double max = Math.Max(r, Math.Max(g, b));
-            double min = Math.Min(r, Math.Min(g, b));
-            double delta = max - min;
-
-            double h = 0;
-            if (delta != 0)
-            {
-                if (max == r) h = 60 * (((g - b) / delta) % 6);
-                else if (max == g) h = 60 * (((b - r) / delta) + 2);
-                else if (max == b) h = 60 * (((r - g) / delta) + 4);
-            }
-
-            double s = (max == 0) ? 0 : (delta / max);
-            double v = max;
-
-            return Color.FromArgb(Clamp((int)(h * 255 / 360)), Clamp((int)(s * 255)), Clamp((int)(v * 255)));
-        }
-
-        private Color RGBToYUV(Color c)
-        {
-            double y = 0.299 * c.R + 0.587 * c.G + 0.114 * c.B;
-            double u = -0.14713 * c.R - 0.28886 * c.G + 0.436 * c.B;
-            double v = 0.615 * c.R - 0.51499 * c.G - 0.10001 * c.B;
-
-            return Color.FromArgb(Clamp((int)y), Clamp((int)(u + 128)), Clamp((int)(v + 128)));
-        }
-
-        private Color RGBToLAB(Color c)
-        {
-            double l = (0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B) / 2.55;
-            double a = (c.R - c.G) + 128;
-            double b = (c.G - c.B) + 128;
-
-            return Color.FromArgb(Clamp((int)(l * 2.55)), Clamp((int)a), Clamp((int)b));
-        }
-
-        private Color RGBToYCbCr(Color c)
-        {
-            double Y = 0.299 * c.R + 0.587 * c.G + 0.114 * c.B;
-            double Cb = -0.168736 * c.R - 0.331264 * c.G + 0.5 * c.B + 128;
-            double Cr = 0.5 * c.R - 0.418688 * c.G - 0.081312 * c.B + 128;
-
-            return Color.FromArgb(Clamp((int)Y), Clamp((int)Cb), Clamp((int)Cr));
-        }
-
-        private Color RGBToCMYK(Color c)
-        {
-            double r = c.R / 255.0;
-            double g = c.G / 255.0;
-            double b = c.B / 255.0;
-
-            double k = 1 - Math.Max(r, Math.Max(g, b));
-
-            double cyan = (1 - r - k) / (1 - k + 0.000001);
-            double magenta = (1 - g - k) / (1 - k + 0.000001);
-            double yellow = (1 - b - k) / (1 - k + 0.000001);
-
-            return Color.FromArgb(
-                Clamp((int)(cyan * 255)),
-                Clamp((int)(magenta * 255)),
-                Clamp((int)(yellow * 255))
-            );
+            if (lblCh1.Tag != null) lblCh1.Text = $"{lblCh1.Tag}: {trkR.Value}";
+            if (lblCh2.Tag != null) lblCh2.Text = $"{lblCh2.Tag}: {trkG.Value}";
+            if (lblCh3.Tag != null) lblCh3.Text = $"{lblCh3.Tag}: {trkB.Value}";
+            if (lblCh4.Tag != null && trk4.Visible) lblCh4.Text = $"{lblCh4.Tag}: {trk4.Value}";
+            else lblCh4.Text = "";
         }
 
         private void ApplyColorTransform()
@@ -388,12 +299,22 @@ namespace homeworkMaltimedia
             Bitmap bmp = new Bitmap(originalBitmap);
             string selectedSystem = cmbColorSystem.SelectedItem?.ToString() ?? "RGB";
 
-            BitmapData data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),ImageLockMode.ReadWrite,PixelFormat.Format32bppArgb); 
+            BitmapData data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
 
             int bytesCount = data.Stride * bmp.Height;
             byte[] pixels = new byte[bytesCount];
 
             Marshal.Copy(data.Scan0, pixels, 0, bytesCount);
+
+            int val1 = trkR.Value;
+            int val2 = trkG.Value;
+            int val3 = trkB.Value;
+            int val4 = trk4.Value;
+
+            bool chk1 = checkBox1.Checked;
+            bool chk2 = checkBox2.Checked;
+            bool chk3 = checkBox3.Checked;
+            bool chk4 = checkBox4.Checked;
 
             for (int i = 0; i < pixels.Length; i += 4)
             {
@@ -402,21 +323,93 @@ namespace homeworkMaltimedia
                 byte r = pixels[i + 2];
 
                 Color currentPixelColor = Color.FromArgb(r, g, b);
-                Color resultColor = currentPixelColor;
+                int outR = r, outG = g, outB = b;
 
                 switch (selectedSystem)
                 {
-                    case "YCbCr": resultColor = RGBToYCbCr(currentPixelColor); break;
-                    case "HSV": resultColor = RGBToHSV(currentPixelColor); break;
-                    case "CMYK": resultColor = RGBToCMYK(currentPixelColor); break;
-                    case "YUV": resultColor = RGBToYUV(currentPixelColor); break;
-                    case "LAB": resultColor = RGBToLAB(currentPixelColor); break;
-                    case "RGB": resultColor = currentPixelColor; break;
+                    case "RGB":
+                        outR = chk1 ? ColorHelper.Clamp(r + val1) : 0;
+                        outG = chk2 ? ColorHelper.Clamp(g + val2) : 0;
+                        outB = chk3 ? ColorHelper.Clamp(b + val3) : 0;
+                        break;
+                    case "HSV":
+                        Color hsv = ColorHelper.RGBToHSV(currentPixelColor);
+                        double H = (hsv.R / 255.0) * 360; 
+                        double S = hsv.G / 255.0; 
+                        double V = hsv.B / 255.0; 
+
+                        if (chk1) {
+                            H += val1;
+                            if (H < 0) H += 360;
+                            if (H >= 360) H %= 360;
+                        } 
+                        else S = 0;
+
+                        if (chk2) S = Math.Max(0, Math.Min(1, S + (val2 / 100.0)));
+                        else S = 0;
+                        
+                        if (chk3) V = Math.Max(0, Math.Min(1, V + (val3 / 100.0)));
+                        else V = 0; 
+
+                        Color resHSV = ColorHelper.HSVToRGB(H, S, V);
+                        outR = resHSV.R; outG = resHSV.G; outB = resHSV.B;
+                        break;
+                    case "CMYK":
+                        double C, M, Y_c, K;
+                        ColorHelper.RGBToCMYK_Ext(currentPixelColor, out C, out M, out Y_c, out K);
+                        
+                        if (chk1) C = Math.Max(0, Math.Min(1, C + val1 / 255.0)); else C = 0;
+                        if (chk2) M = Math.Max(0, Math.Min(1, M + val2 / 255.0)); else M = 0;
+                        if (chk3) Y_c = Math.Max(0, Math.Min(1, Y_c + val3 / 255.0)); else Y_c = 0;
+                        if (chk4) K = Math.Max(0, Math.Min(1, K + val4 / 255.0)); else K = 0;
+
+                        Color resCMYK = ColorHelper.CMYKToRGB(C, M, Y_c, K);
+                        outR = resCMYK.R; outG = resCMYK.G; outB = resCMYK.B;
+                        break;
+                    case "YUV":
+                        Color yuv = ColorHelper.RGBToYUV(currentPixelColor);
+                        int yy = yuv.R;
+                        int uu = yuv.G - 128;
+                        int vv = yuv.B - 128;
+
+                        if (chk1) yy = ColorHelper.Clamp(yy + val1); else yy = 128;
+                        if (chk2) uu = ColorHelper.Clamp(uu + val2 + 128) - 128; else uu = 0;
+                        if (chk3) vv = ColorHelper.Clamp(vv + val3 + 128) - 128; else vv = 0;
+
+                        Color resYUV = ColorHelper.YUVToRGB(yy, uu, vv);
+                        outR = resYUV.R; outG = resYUV.G; outB = resYUV.B;
+                        break;
+                    case "LAB":
+                        Color lab = ColorHelper.RGBToLAB(currentPixelColor);
+                        double l = lab.R / 2.55; 
+                        int aa = lab.G - 128;
+                        int bb = lab.B - 128;
+
+                        if (chk1) l = Math.Max(0, Math.Min(100, l + val1 / 2.55)); else l = 50;
+                        if (chk2) aa = ColorHelper.Clamp(aa + val2 + 128) - 128; else aa = 0;
+                        if (chk3) bb = ColorHelper.Clamp(bb + val3 + 128) - 128; else bb = 0;
+
+                        Color resLAB = ColorHelper.LABToRGB(l, aa, bb);
+                        outR = resLAB.R; outG = resLAB.G; outB = resLAB.B;
+                        break;
+                    case "YCbCr":
+                        Color ycbcr = ColorHelper.RGBToYCbCr(currentPixelColor);
+                        int y_cbcr = ycbcr.R;
+                        int cb = ycbcr.G - 128;
+                        int cr = ycbcr.B - 128;
+
+                        if (chk1) y_cbcr = ColorHelper.Clamp(y_cbcr + val1); else y_cbcr = 128;
+                        if (chk2) cb = ColorHelper.Clamp(cb + val2 + 128) - 128; else cb = 0;
+                        if (chk3) cr = ColorHelper.Clamp(cr + val3 + 128) - 128; else cr = 0;
+
+                        Color resYCbCr = ColorHelper.YCbCrToRGB(y_cbcr, cb, cr);
+                        outR = resYCbCr.R; outG = resYCbCr.G; outB = resYCbCr.B;
+                        break;
                 }
 
-                pixels[i] = resultColor.B; 
-                pixels[i + 1] = resultColor.G; 
-                pixels[i + 2] = resultColor.R; 
+                pixels[i] = (byte)outB;
+                pixels[i + 1] = (byte)outG;
+                pixels[i + 2] = (byte)outR;
             }
 
             Marshal.Copy(pixels, 0, data.Scan0, bytesCount);
@@ -427,10 +420,6 @@ namespace homeworkMaltimedia
             picDisplay.Image = bmp;
         }
 
-        private void numColors_ValueChanged(object sender, EventArgs e)
-        {
-
-        }
 
         private void btnReduceColors_Click(object sender, EventArgs e)
         {
