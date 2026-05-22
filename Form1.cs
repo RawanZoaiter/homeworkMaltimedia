@@ -24,6 +24,8 @@ namespace homeworkMaltimedia
         {
             InitializeComponent();
             SetupEventHandlers();
+            if (colorSpaceVisualizer != null)
+                colorSpaceVisualizer.ActiveSystem = cmbColorSystem.SelectedItem?.ToString() ?? "RGB";
         }
 
         private void SetupEventHandlers()
@@ -206,6 +208,8 @@ namespace homeworkMaltimedia
         {
             UpdateColorSystemUI();
             ApplyColorTransform();
+            if (colorSpaceVisualizer != null)
+                colorSpaceVisualizer.ActiveSystem = cmbColorSystem.SelectedItem?.ToString() ?? "RGB";
         }
 
        

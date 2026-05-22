@@ -343,6 +343,10 @@
             this.tab3DColorSpace.TabIndex = 1;
             this.tab3DColorSpace.Text = "3D Color Space";
             this.tab3DColorSpace.UseVisualStyleBackColor = true;
+            this.colorSpaceVisualizer = new homeworkMaltimedia.ColorSpaceVisualizer();
+            this.colorSpaceVisualizer.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.colorSpaceVisualizer.Name = "colorSpaceVisualizer";
+            this.tab3DColorSpace.Controls.Add(this.colorSpaceVisualizer);
             // 
             // tabMetadata
             // 
@@ -505,6 +509,7 @@
         private System.Windows.Forms.TabPage tabDisplay;
         private System.Windows.Forms.PictureBox picDisplay;
         private System.Windows.Forms.TabPage tab3DColorSpace;
+        private ColorSpaceVisualizer colorSpaceVisualizer;
         private System.Windows.Forms.TabPage tabMetadata;
         private System.Windows.Forms.ListView lstMetadata;
         private System.Windows.Forms.ColumnHeader colProperty;
