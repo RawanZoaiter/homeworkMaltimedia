@@ -26,13 +26,14 @@ namespace homeworkMaltimedia
             SetupEventHandlers();
             if (colorSpaceVisualizer != null)
                 colorSpaceVisualizer.ActiveSystem = cmbColorSystem.SelectedItem?.ToString() ?? "RGB";
+            colorSpaceVisualizer.OnColorPicked += ColorPickedFrom3D;
         }
-
         private void SetupEventHandlers()
         {
             picDisplay.DragEnter += PicDisplay_DragEnter;
             picDisplay.DragDrop += PicDisplay_DragDrop;
             picDisplay.MouseMove += PicDisplay_MouseMove;
+            picDisplay.MouseClick += PicDisplay_MouseClick;
 
             trkR.Scroll += (s, e) => { UpdateLabels(); ApplyColorTransform(); };
             trkG.Scroll += (s, e) => { UpdateLabels(); ApplyColorTransform(); };
@@ -456,6 +457,72 @@ namespace homeworkMaltimedia
             bmp.UnlockBits(data);
 
             picDisplay.Image = bmp;
+        }
+        // 5
+        private void PicDisplay_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (picDisplay.Image == null) return;
+
+            Bitmap bmp = new Bitmap(picDisplay.Image);
+
+            int x = e.X;
+            int y = e.Y;
+
+            if (x < 0 || y < 0 || x >= bmp.Width || y >= bmp.Height)
+                return;
+
+            Color pixel = bmp.GetPixel(x, y);
+
+            ShowPixelValues(pixel);
+        }
+
+        private void ShowPixelValues(Color pixel)
+        {
+            int r = pixel.R;
+            int g = pixel.G;
+            int b = pixel.B;
+
+            // ===== HSV =====
+            var hsv = ColorHelper.RGBToHSV(pixel);
+            double H = (hsv.R / 255.0) * 360;
+            double S = hsv.G / 255.0;
+            double V = hsv.B / 255.0;
+
+            // ===== CMYK =====
+            double C, M, Y, K;
+            ColorHelper.RGBToCMYK_Ext(pixel, out C, out M, out Y, out K);
+
+            // ===== YUV =====
+            Color yuv = ColorHelper.RGBToYUV(pixel);
+            int Yyuv = yuv.R;
+            int U = yuv.G - 128;
+            int Vv = yuv.B - 128;
+
+            // ===== LAB =====
+            Color lab = ColorHelper.RGBToLAB(pixel);
+            double L = lab.R / 2.55;
+            int A = lab.G - 128;
+            int B = lab.B - 128;
+
+            // ===== YCbCr =====
+            Color ycbcr = ColorHelper.RGBToYCbCr(pixel);
+            int Y2 = ycbcr.R;
+            int Cb = ycbcr.G;
+            int Cr = ycbcr.B;
+
+
+            lblStatusPixel.Text =
+                $"RGB → ({r}, {g}, {b})\n" +
+                $"HSV → ({Math.Round(H)}°, {Math.Round(S * 100)}%, {Math.Round(V * 100)}%)\n" +
+                $"CMYK → ({Math.Round(C * 100)}%, {Math.Round(M * 100)}%, {Math.Round(Y * 100)}%, {Math.Round(K * 100)}%)\n" +
+                $"YUV → ({Yyuv}, {U}, {Vv})\n" +
+                $"LAB → ({Math.Round(L)}, {A}, {B})\n" +
+                $"YCbCr → ({Y2}, {Cb}, {Cr})";
+        }
+
+        private void ColorPickedFrom3D(Color pixel)
+        {
+            ShowPixelValues(pixel);
         }
     }
 }

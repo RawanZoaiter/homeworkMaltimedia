@@ -8,6 +8,7 @@ namespace homeworkMaltimedia
 {
     public class ColorSpaceVisualizer : UserControl
     {
+        public event Action<Color> OnColorPicked;
         private string _activeSystem = "RGB";
         private float _yaw = 0.6f;
         private float _pitch = 0.5f;
@@ -136,9 +137,9 @@ namespace homeworkMaltimedia
 
         private void DrawRgbCube(Graphics g)
         {
-            // Sorted sample points (painter's algorithm)
             int n = RgbSamplesPerAxis;
             var points = new List<Sample>(n * n * n);
+
             for (int i = 0; i < n; i++)
                 for (int j = 0; j < n; j++)
                     for (int k = 0; k < n; k++)
@@ -146,27 +147,23 @@ namespace homeworkMaltimedia
                         float fx = i / (float)(n - 1);
                         float fy = j / (float)(n - 1);
                         float fz = k / (float)(n - 1);
+
                         points.Add(new Sample
                         {
                             X = fx,
                             Y = fy,
                             Z = fz,
                             D = Depth(fx, fy, fz),
-                            Color = Color.FromArgb(
-                                (int)(fx * 255),
-                                (int)(fy * 255),
-                                (int)(fz * 255))
+
+                            Color = ToColor(fx, fy, fz)
                         });
                     }
-            // Draw cube edges (behind points)
+
             DrawCubeFrame(g, false);
-
             DrawSortedSamples(g, points, n);
-
-            // Draw labeled axes on top
-            DrawAxes(g, "R", "G", "B", Color.Red, Color.LimeGreen, Color.DeepSkyBlue);
+            DrawAxes(g, "R", "G", "B",
+                Color.Red, Color.LimeGreen, Color.DeepSkyBlue);
         }
-
         private void DrawSortedSamples(Graphics g, List<Sample> points, int density)
         {
             points.Sort((a, b) => a.D.CompareTo(b.D));
@@ -461,6 +458,106 @@ namespace homeworkMaltimedia
         {
             public float X, Y, Z, D;
             public Color Color;
+        }
+
+         // 5//
+        protected override void OnMouseClick(MouseEventArgs e)
+        {
+            base.OnMouseClick(e);
+
+            Color picked = PickColorFromScreen(e.Location);
+            OnColorPicked?.Invoke(picked);
+        }
+
+
+        
+
+
+        private Color MapToRGB(float x, float y, float z)
+        {
+            switch (_activeSystem.ToUpper())
+            {
+                case "RGB":
+                    return Color.FromArgb(
+                        (int)(x * 255),
+                        (int)(y * 255),
+                        (int)(z * 255));
+
+                case "HSV":
+                    return HsvToColor(x * 360, y, z);
+
+                case "CMYK":
+                    return CmykToRgb(x, y, z, 0f);
+
+                case "YUV":
+                    return YuvToRgb(y, x - 0.5f, z - 0.5f);
+
+                case "YCbCr":
+                    return YCbCrToRgb(y, x, z);
+
+                case "LAB":
+                    double L = y * 100;
+                    double a = (x - 0.5) * 200;
+                    double b = (z - 0.5) * 200;
+                    return LabToRgb(L, a, b);
+
+                default:
+                    return Color.White;
+            }
+        }
+
+       
+        private Color CmykToRgb(float c, float m, float y, float k)
+        {
+            int r = (int)(255 * (1 - c) * (1 - k));
+            int g = (int)(255 * (1 - m) * (1 - k));
+            int b = (int)(255 * (1 - y) * (1 - k));
+
+            return Color.FromArgb(Clamp255(r), Clamp255(g), Clamp255(b));
+        }
+
+        private Color ToColor(float x, float y, float z)
+        {
+            return Color.FromArgb(
+                (int)(x * 255),
+                (int)(y * 255),
+                (int)(z * 255));
+        }
+
+
+        private Color PickColorFromScreen(Point p)
+        {
+            int n = RgbSamplesPerAxis;
+
+            float bestScore = float.MaxValue;
+            Color bestColor = Color.Black;
+
+            for (int i = 0; i < n; i++)
+                for (int j = 0; j < n; j++)
+                    for (int k = 0; k < n; k++)
+                    {
+                        float x = i / (float)(n - 1);
+                        float y = j / (float)(n - 1);
+                        float z = k / (float)(n - 1);
+
+                        var projected = Project(x, y, z);
+
+                        float dx = projected.X - p.X;
+                        float dy = projected.Y - p.Y;
+
+                       
+                        float dz = Depth(x, y, z);
+
+                        float score = dx * dx + dy * dy + (dz * dz * 0.3f);
+
+                        if (score < bestScore)
+                        {
+                            bestScore = score;
+                            bestColor = MapToRGB(x, y, z);
+                        }
+                    }
+
+            return bestColor;
         }
     }
 }
