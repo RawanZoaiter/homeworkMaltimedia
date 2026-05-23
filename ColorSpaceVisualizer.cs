@@ -148,7 +148,9 @@ namespace homeworkMaltimedia
                         float fz = k / (float)(n - 1);
                         points.Add(new Sample
                         {
-                            X = fx, Y = fy, Z = fz,
+                            X = fx,
+                            Y = fy,
+                            Z = fz,
                             D = Depth(fx, fy, fz),
                             Color = Color.FromArgb(
                                 (int)(fx * 255),
@@ -245,7 +247,9 @@ namespace homeworkMaltimedia
                         float fy = v;
                         points.Add(new Sample
                         {
-                            X = fx, Y = fy, Z = fz,
+                            X = fx,
+                            Y = fy,
+                            Z = fz,
                             D = Depth(fx, fy, fz),
                             Color = HsvToColor(h, s, Math.Max(0.05, v))
                         });
@@ -298,7 +302,9 @@ namespace homeworkMaltimedia
                         int bb = (int)((1 - y) * (1 - k) * 255);
                         points.Add(new Sample
                         {
-                            X = fx, Y = fy, Z = fz,
+                            X = fx,
+                            Y = fy,
+                            Z = fz,
                             D = Depth(fx, fy, fz),
                             Color = Color.FromArgb(Clamp255(rr), Clamp255(gg), Clamp255(bb))
                         });
@@ -322,7 +328,9 @@ namespace homeworkMaltimedia
                             : YuvToRgb(yl, u - 0.5f, v - 0.5f);
                         points.Add(new Sample
                         {
-                            X = u, Y = yl, Z = v,
+                            X = u,
+                            Y = yl,
+                            Z = v,
                             D = Depth(u, yl, v),
                             Color = col
                         });
@@ -358,7 +366,9 @@ namespace homeworkMaltimedia
                         double b = (bz - 0.5) * 200.0;
                         points.Add(new Sample
                         {
-                            X = ax, Y = ly, Z = bz,
+                            X = ax,
+                            Y = ly,
+                            Z = bz,
                             D = Depth(ax, ly, bz),
                             Color = LabToRgb(L, a, b)
                         });

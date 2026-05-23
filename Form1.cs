@@ -10,7 +10,7 @@ using System.Windows.Forms;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Emgu.CV;
-using Emgu.CV.CvEnum;
+//using Emgu.CV.CvEnum;
 
 namespace homeworkMaltimedia
 {
@@ -212,7 +212,7 @@ namespace homeworkMaltimedia
                 colorSpaceVisualizer.ActiveSystem = cmbColorSystem.SelectedItem?.ToString() ?? "RGB";
         }
 
-       
+
         private void UpdateColorSystemUI()
         {
             var sys = cmbColorSystem.SelectedItem?.ToString() ?? "RGB";
@@ -227,7 +227,7 @@ namespace homeworkMaltimedia
             trkG.Minimum = -1000; trkG.Maximum = 1000;
             trkB.Minimum = -1000; trkB.Maximum = 1000;
             trk4.Minimum = -1000; trk4.Maximum = 1000;
-            
+
             trkR.Value = 0; trkG.Value = 0; trkB.Value = 0; trk4.Value = 0;
             trk4.Visible = false;
 
@@ -338,22 +338,23 @@ namespace homeworkMaltimedia
                         break;
                     case "HSV":
                         Color hsv = ColorHelper.RGBToHSV(currentPixelColor);
-                        double H = (hsv.R / 255.0) * 360; 
-                        double S = hsv.G / 255.0; 
-                        double V = hsv.B / 255.0; 
+                        double H = (hsv.R / 255.0) * 360;
+                        double S = hsv.G / 255.0;
+                        double V = hsv.B / 255.0;
 
-                        if (chk1) {
+                        if (chk1)
+                        {
                             H += val1;
                             if (H < 0) H += 360;
                             if (H >= 360) H %= 360;
-                        } 
+                        }
                         else S = 0;
 
                         if (chk2) S = Math.Max(0, Math.Min(1, S + (val2 / 100.0)));
                         else S = 0;
-                        
+
                         if (chk3) V = Math.Max(0, Math.Min(1, V + (val3 / 100.0)));
-                        else V = 0; 
+                        else V = 0;
 
                         Color resHSV = ColorHelper.HSVToRGB(H, S, V);
                         outR = resHSV.R; outG = resHSV.G; outB = resHSV.B;
@@ -361,7 +362,7 @@ namespace homeworkMaltimedia
                     case "CMYK":
                         double C, M, Y_c, K;
                         ColorHelper.RGBToCMYK_Ext(currentPixelColor, out C, out M, out Y_c, out K);
-                        
+
                         if (chk1) C = Math.Max(0, Math.Min(1, C + val1 / 255.0)); else C = 0;
                         if (chk2) M = Math.Max(0, Math.Min(1, M + val2 / 255.0)); else M = 0;
                         if (chk3) Y_c = Math.Max(0, Math.Min(1, Y_c + val3 / 255.0)); else Y_c = 0;
@@ -385,7 +386,7 @@ namespace homeworkMaltimedia
                         break;
                     case "LAB":
                         Color lab = ColorHelper.RGBToLAB(currentPixelColor);
-                        double l = lab.R / 2.55; 
+                        double l = lab.R / 2.55;
                         int aa = lab.G - 128;
                         int bb = lab.B - 128;
 
@@ -436,7 +437,7 @@ namespace homeworkMaltimedia
             int width = bmp.Width;
             int height = bmp.Height;
 
-            BitmapData data = bmp.LockBits(new Rectangle(0, 0, width, height),ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+            BitmapData data = bmp.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
 
             int bytes = data.Stride * height;
             byte[] pixels = new byte[bytes];
@@ -446,13 +447,13 @@ namespace homeworkMaltimedia
 
             for (int i = 0; i < pixels.Length; i += 4)
             {
-                pixels[i] = (byte)((pixels[i] / step) * step);    
-                pixels[i + 1] = (byte)((pixels[i + 1] / step) * step); 
-                pixels[i + 2] = (byte)((pixels[i + 2] / step) * step); 
+                pixels[i] = (byte)((pixels[i] / step) * step);
+                pixels[i + 1] = (byte)((pixels[i + 1] / step) * step);
+                pixels[i + 2] = (byte)((pixels[i + 2] / step) * step);
             }
 
             Marshal.Copy(pixels, 0, data.Scan0, bytes);
-            bmp.UnlockBits(data); 
+            bmp.UnlockBits(data);
 
             picDisplay.Image = bmp;
         }
