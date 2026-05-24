@@ -19,7 +19,13 @@ namespace homeworkMaltimedia
         private string currentImagePath;
         private Bitmap originalBitmap;
         private Bitmap workingBitmap;
-
+        private string rgbText = "";
+        private string hsvText = "";
+        private string cmykText = "";
+        private string yuvText = "";
+        private string labText = "";
+        private string ycbcrText = "";
+        ToolTip tt = new ToolTip();
         public Form1()
         {
             InitializeComponent();
@@ -27,6 +33,9 @@ namespace homeworkMaltimedia
             if (colorSpaceVisualizer != null)
                 colorSpaceVisualizer.ActiveSystem = cmbColorSystem.SelectedItem?.ToString() ?? "RGB";
             colorSpaceVisualizer.OnColorPicked += ColorPickedFrom3D;
+            tt.ShowAlways = true;
+
+
         }
         private void SetupEventHandlers()
         {
@@ -34,6 +43,7 @@ namespace homeworkMaltimedia
             picDisplay.DragDrop += PicDisplay_DragDrop;
             picDisplay.MouseMove += PicDisplay_MouseMove;
             picDisplay.MouseClick += PicDisplay_MouseClick;
+            
 
             trkR.Scroll += (s, e) => { UpdateLabels(); ApplyColorTransform(); };
             trkG.Scroll += (s, e) => { UpdateLabels(); ApplyColorTransform(); };
@@ -459,25 +469,61 @@ namespace homeworkMaltimedia
             picDisplay.Image = bmp;
         }
         // 5
+   
         private void PicDisplay_MouseClick(object sender, MouseEventArgs e)
         {
             if (picDisplay.Image == null) return;
 
-            Bitmap bmp = new Bitmap(picDisplay.Image);
-
             int x = e.X;
             int y = e.Y;
 
-            if (x < 0 || y < 0 || x >= bmp.Width || y >= bmp.Height)
+            if (x < 0 || y < 0 ||
+                x >= picDisplay.Image.Width ||
+                y >= picDisplay.Image.Height)
                 return;
 
+            Bitmap bmp = new Bitmap(picDisplay.Image);
             Color pixel = bmp.GetPixel(x, y);
 
             ShowPixelValues(pixel);
+
+            var hsv = ColorHelper.RGBToHSV(pixel);
+            double H = (hsv.R / 255.0) * 360;
+            double S = hsv.G / 255.0;
+            double V = hsv.B / 255.0;
+
+            ColorHelper.RGBToCMYK_Ext(pixel, out double C, out double M, out double Y, out double K);
+
+            Color yuv = ColorHelper.RGBToYUV(pixel);
+            int Yyuv = yuv.R;
+            int U = yuv.G - 128;
+            int Vv = yuv.B - 128;
+
+            Color lab = ColorHelper.RGBToLAB(pixel);
+            double L = lab.R / 2.55;
+            int A = lab.G - 128;
+            int B = lab.B - 128;
+
+            Color ycbcr = ColorHelper.RGBToYCbCr(pixel);
+            int Y2 = ycbcr.R;
+            int Cb = ycbcr.G;
+            int Cr = ycbcr.B;
+
+            string text =
+                $"RGB: ({pixel.R},{pixel.G},{pixel.B})\n" +
+                $"HSV: ({Math.Round(H)}°, {Math.Round(S * 100)}%, {Math.Round(V * 100)}%)\n" +
+                $"CMYK: ({Math.Round(C * 100)}%, {Math.Round(M * 100)}%, {Math.Round(Y * 100)}%, {Math.Round(K * 100)}%)\n" +
+                $"YUV: ({Yyuv},{U},{Vv})\n" +
+                $"LAB: ({Math.Round(L)},{A},{B})\n" +
+                $"YCbCr: ({Y2},{Cb},{Cr})";
+
+            tt.Show(text, picDisplay, e.X + 15, e.Y + 15, 1500);
         }
+
 
         private void ShowPixelValues(Color pixel)
         {
+           
             int r = pixel.R;
             int g = pixel.G;
             int b = pixel.B;
@@ -512,17 +558,20 @@ namespace homeworkMaltimedia
 
 
             lblStatusPixel.Text =
-                $"RGB → ({r}, {g}, {b})\n" +
-                $"HSV → ({Math.Round(H)}°, {Math.Round(S * 100)}%, {Math.Round(V * 100)}%)\n" +
-                $"CMYK → ({Math.Round(C * 100)}%, {Math.Round(M * 100)}%, {Math.Round(Y * 100)}%, {Math.Round(K * 100)}%)\n" +
-                $"YUV → ({Yyuv}, {U}, {Vv})\n" +
-                $"LAB → ({Math.Round(L)}, {A}, {B})\n" +
-                $"YCbCr → ({Y2}, {Cb}, {Cr})";
+    $"RGB:  ({r}, {g}, {b})\n" +
+    $"HSV:  ({Math.Round(H)}°, {Math.Round(S * 100)}%, {Math.Round(V * 100)}%)\n" +
+    $"CMYK: ({Math.Round(C * 100)}%, {Math.Round(M * 100)}%, {Math.Round(Y * 100)}%, {Math.Round(K * 100)}%)\n" +
+    $"YUV:  ({Yyuv}, {U}, {Vv})\n" +
+    $"LAB:  ({Math.Round(L)}, {A}, {B})\n" +
+    $"YCbCr:({Y2}, {Cb}, {Cr})";
         }
+
 
         private void ColorPickedFrom3D(Color pixel)
         {
             ShowPixelValues(pixel);
         }
+
+
     }
 }
